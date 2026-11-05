@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Thi Trắc Nghiệm Tin Học 12 - Định Hướng Tin Học Ứng Dụng</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --success-color: #16a34a;
+            --danger-color: #dc2626;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-color: #1e293b;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .screen {
+            display: none;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        #login-screen {
+            max-width: 450px;
+            margin: 80px auto;
+            text-align: center;
+        }
+
+        #login-screen h2 {
+            margin-bottom: 20px;
+            color: var(--primary-color);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+        }
+
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.1s;
+            width: 100%;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .error-msg {
+            color: var(--danger-color);
+            font-size: 14px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .exam-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .timer-box {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .exam-layout {
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            gap: 25px;
+        }
+
+        @media (max-width: 768px) {
+            .exam-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .question-card {
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .question-title {
+            font-weight: 600;
+            margin-bottom: 15px;
+            font-size: 17px;
+        }
+
+        .options-list {
+            list-style: none;
+        }
+
+        .option-item {
+            margin-bottom: 10px;
+        }
+
+        .option-label {
+            display: flex;
+            align-items: center;
+            padding: 10px 14px;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .option-label:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+
+        .option-label input {
+            margin-right: 12px;
+            transform: scale(1.2);
+        }
+
+        .sidebar {
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+
+        .sidebar h3 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .palette-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+            max-height: 350px;
+            overflow-y: auto;
+            padding: 5px;
+        }
+
+        .palette-btn {
+            aspect-ratio: 1;
+            border: 1px solid var(--border-color);
+            background: white;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .palette-btn.answered {
+            background: #dbeafe;
+            border-color: #3b82f6;
+            color: #1e40af;
+        }
+
+        .palette-legend {
+            font-size: 13px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 15px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 15px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+        }
+
+        .correct-ans {
+            background-color: #dcfce7 !important;
+            border-color: #16a34a !important;
+            color: #15803d;
+            font-weight: 600;
+        }
+
+        .incorrect-ans {
+            background-color: #fee2e2 !important;
+            border-color: #dc2626 !important;
+            color: #b91c1c;
+        }
+
+        .explanation {
+            margin-top: 12px;
+            padding: 10px 14px;
+            background: #eff6ff;
+            border-left: 4px solid var(--primary-color);
+            border-radius: 0 6px 6px 0;
+            font-size: 14px;
+            display: none;
+        }
+
+        .result-summary {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, #eff6ff, #dbeafe);
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+
+        .result-score {
+            font-size: 42px;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 10px 0;
+        }
+
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .leaderboard-table th, .leaderboard-table td {
+            padding: 12px 15px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .leaderboard-table th {
+            background-color: #f1f5f9;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .badge-gold { background: #eab308; }
+        .badge-silver { background: #94a3b8; }
+        .badge-bronze { background: #b45309; }
+        .badge-normal { background: #64748b; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- MÀN HÌNH ĐĂNG NHẬP & MẬT KHẨU -->
+    <div id="login-screen" class="screen active">
+        <h2>THI TRẮC NGHIỆM TIN HỌC 12</h2>
+        <p style="margin-bottom: 20px; color: #64748b;">Định hướng Tin học ứng dụng - Kết nối tri thức</p>
+        <div class="form-group">
+            <label for="student-name">Họ và tên thí sinh:</label>
+            <input type="text" id="student-name" class="form-control" placeholder="Nhập họ và tên của bạn...">
+        </div>
+        <div class="form-group">
+            <label for="exam-password">Mật khẩu vào thi:</label>
+            <input type="password" id="exam-password" class="form-control" placeholder="Nhập mật khẩu...">
+        </div>
+        <button class="btn" onclick="validateLogin()">Bắt đầu làm bài</button>
+        <div id="login-error" class="error-msg">Mật khẩu không đúng hoặc chưa nhập họ tên!</div>
+    </div>
+
+    <!-- MÀN HÌNH LÀM BÀI THI -->
+    <div id="exam-screen" class="screen">
+        <div class="exam-header">
+            <div>
+                <h2 id="candidate-display">Thí sinh: </h2>
+                <p style="color: #64748b; font-size: 14px;">Mã đề: <span id="exam-code-display">001</span> | Tổng số câu: 40 câu (Thời gian: 45 phút)</p>
+            </div>
+            <div class="timer-box">
+                ⏱️ <span id="timer">45:00</span>
+            </div>
+        </div>
+
+        <div class="exam-layout">
+            <div id="questions-container"></div>
+
+            <div class="sidebar">
+                <h3>Bảng Câu Hỏi</h3>
+                <div class="palette-grid" id="palette-grid"></div>
+                <div class="palette-legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: white; border: 1px solid var(--border-color);"></div>
+                        <span>Chưa chọn</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #dbeafe; border: 1px solid #3b82f6;"></div>
+                        <span>Đã chọn</span>
+                    </div>
+                </div>
+                <button class="btn" onclick="submitExam()" style="background-color: var(--success-color);">Nộp bài thi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MÀN HÌNH KẾT QUẢ & BẢNG XẾP HẠNG -->
+    <div id="result-screen" class="screen">
+        <div class="result-summary">
+            <h2>KẾT QUẢ BÀI THI</h2>
+            <div class="result-score" id="score-display">10.0 / 10</div>
+            <p id="result-detail-text">Bạn đã hoàn thành bài thi xuất sắc!</p>
+            <p id="fun-title" style="margin-top: 10px; font-weight: bold; color: #d97706;"></p>
+        </div>
+
+        <h3>Bảng Xếp Hạng & Vinh Danh</h3>
+        <table class="leaderboard-table">
+            <thead>
+                <tr>
+                    <th>Hạng</th>
+                    <th>Họ và Tên</th>
+                    <th>Điểm số</th>
+                    <th>Thời gian hoàn thành</th>
+                    <th>Danh hiệu thú vị</th>
+                </tr>
+            </thead>
+            <tbody id="leaderboard-body"></tbody>
+        </table>
+
+        <div style="margin-top: 25px; text-align: center;">
+            <button class="btn" onclick="location.reload()" style="max-width: 250px;">Làm lại đề thi khác</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const questionBank = [
+        {
+            q: "Điểm khác nhau của switch và hub là gì?",
+            options: ["Hình dạng.", "Số cổng.", "Cách thức hoạt động.", "Màu sắc."],
+            answer: 2,
+            type: "mc",
+            exp: "Hub quảng bá dữ liệu tới tất cả các cổng, còn Switch kiểm tra địa chỉ MAC và chuyển dữ liệu trực tiếp đến đúng cổng thiết bị nhận."
+        },
+        {
+            q: "Wi-Fi sử dụng loại sóng nào để truyền dữ liệu?",
+            options: ["Sóng điện từ.", "Sóng vô tuyến điện.", "Sóng ánh sáng.", "Sóng mang."],
+            answer: 1,
+            type: "mc",
+            exp: "Wi-Fi sử dụng sóng vô tuyến điện (radio waves) để truyền phát tín hiệu không dây."
+        },
+        {
+            q: "Khi kết nối hai máy tính cách xa hàng nghìn kilômét qua Internet, người ta sử dụng thiết bị nào để kết nối các LAN với nhau?",
+            options: ["Hub.", "Wireless Access Point.", "Switch.", "Router."],
+            answer: 3,
+            type: "mc",
+            exp: "Router (Thiết bị định tuyến) có chức năng định đường đi và kết nối các mạng LAN với nhau qua mạng diện rộng Internet."
+        },
+        {
+            q: "Loại modem nào cho phép nối hai máy tính qua hệ thống chuyển mạch của mạng điện thoại công cộng?",
+            options: ["Modem quay số.", "Modem GSM 3G, 4G, 5G,…", "Modem ADSL.", "Modem quang."],
+            answer: 0,
+            type: "mc",
+            exp: "Modem quay số (Dial-up modem) kết nối thông qua hệ thống chuyển mạch của mạng điện thoại công cộng PSTN."
+        },
+        {
+            q: "Wireless Access Point (WAP) có chức năng gì?",
+            options: [
+                "Chuyển đổi tín hiệu từ số sang tương tự.",
+                "Kết nối các máy tính trong cùng LAN trực tiếp qua cáp.",
+                "Dùng để kết nối các thiết bị đầu cuối qua sóng Wi-Fi giúp giảm chi phí hoặc mở rộng phạm vi làm việc của LAN.",
+                "Dùng để dẫn đường cho dữ liệu khi kết nối trên mạng diện rộng."
+            ],
+            answer: 2,
+            type: "mc",
+            exp: "WAP cung cấp điểm truy cập không dây giúp thiết bị đầu cuối kết nối vào mạng LAN."
+        },
+        {
+            q: "Các quy định liên quan đến gửi thư điện tử có tên là gì?",
+            options: ["Giao thức IMAP.", "Giao thức MQTT.", "Giao thức SMTP.", "Giao thức POP3."],
+            answer: 2,
+            type: "mc",
+            exp: "SMTP (Simple Mail Transfer Protocol) là giao thức chuẩn dùng để gửi thư điện tử."
+        },
+        {
+            q: "Việc truyền dữ liệu trong mạng cục bộ sẽ căn cứ vào địa chỉ gì?",
+            options: ["Địa chỉ IP.", "Địa chỉ MAC.", "Địa chỉ LAN.", "Địa chỉ Server."],
+            answer: 1,
+            type: "mc",
+            exp: "Trong mạng cục bộ Ethernet, dữ liệu truyền dựa trên địa chỉ vật lý MAC."
+        },
+        {
+            q: "Việc trao đổi dữ liệu giữa các máy tính trong mạng cục bộ tuân thủ theo giao thức nào?",
+            options: ["Giao thức HTTPS.", "Giao thức TCP/IP.", "Giao thức DNS.", "Giao thức Ethernet."],
+            answer: 3,
+            type: "mc",
+            exp: "Giao thức chuẩn ở tầng liên kết dữ liệu trong mạng cục bộ là Ethernet."
+        },
+        {
+            q: "Phát biểu nào sau đây sai về định tuyến và giao thức mạng?",
+            options: [
+                "Theo phương pháp định tuyến tĩnh, mỗi router có một bảng định tuyến.",
+                "Giao thức TCP đảm bảo việc truyền dữ liệu theo từng ứng dụng chính xác, tin cậy.",
+                "MAC là địa chỉ vật lí của máy tính.",
+                "Giao thức IP đảm bảo chuyển dữ liệu từ mạng này đến mạng kia nhưng đồng thời cũng chịu trách nhiệm chuyển đến một ứng dụng cụ thể."
+            ],
+            answer: 3,
+            type: "mc",
+            exp: "Giao thức IP chỉ chuyển gói tin từ máy này sang máy khác qua mạng, việc chuyển đến ứng dụng cụ thể là nhiệm vụ của TCP/UDP."
+        },
+        {
+            q: "Địa chỉ IP 11001011 10100010 00101001 11111110 dưới dạng thập phân là:",
+            options: ["203.162.41.254.", "230.178.52.166.", "203.126.71.235.", "235.197.80.255."],
+            answer: 0,
+            type: "mc",
+            exp: "Chuyển từng nhóm 8 bit (byte) sang hệ thập phân ta được: 203.162.41.254."
+        },
+        {
+            q: "Giao tiếp trong không gian mạng giúp mở rộng kết nối xã hội như thế nào?",
+            options: [
+                "Cung cấp nhiều công cụ hội nghị trực tuyến, nhắn tin nhanh, mạng xã hội.",
+                "Những người sống xa nhau có thể giao tiếp mọi lúc, mọi nơi khi có mạng.",
+                "Điện thoại video giúp con người gần nhau hơn.",
+                "Xây dựng thương hiệu cá nhân hoặc doanh nghiệp hiệu quả."
+            ],
+            answer: 1,
+            type: "mc",
+            exp: "SGK nhấn mạnh khả năng kết nối mọi lúc, mọi nơi bất chấp khoảng cách địa lý."
+        },
+        {
+            q: "Vì sao giao tiếp trong không gian mạng ẩn chứa nhiều nguy cơ về bảo mật và quyền riêng tư?",
+            options: [
+                "Dễ dàng giấu mặt, giả mạo thông tin khiến người khác khó đánh giá tính chân thật.",
+                "Mất kết nối mạng dẫn đến gián đoạn.",
+                "Dữ liệu bị xâm phạm khiến các thông tin riêng tư, nhạy cảm bị rò rỉ hoặc tấn công.",
+                "Thư điện tử gây khó khăn trong truyền đạt cảm xúc."
+            ],
+            answer: 2,
+            type: "mc",
+            exp: "Nguy cơ lớn nhất về bảo mật và quyền riêng tư là dữ liệu cá nhân bị rò rỉ và tấn công mạng."
+        },
+        {
+            q: "“Chia sẻ thông tin chính xác và đáng tin cậy, tránh lan truyền thông tin sai lệch hoặc tin đồn” thể hiện khía cạnh nào?",
+            options: ["Lịch sự.", "Thấu hiểu.", "Tôn trọng.", "Hỗ trợ."],
+            answer: 2,
+            type: "mc",
+            exp: "Đó là biểu hiện của sự tôn trọng cộng đồng và người đọc trong không gian mạng."
+        },
+        {
+            q: "Em cần làm gì để hình thành thói quen ứng xử nhân văn trong không gian mạng?",
+            options: [
+                "Đối xử với người khác theo cách mà mình muốn.",
+                "Tự kiểm điểm, cải thiện hành vi trực tuyến của mình.",
+                "Làm theo ý muốn cá nhân, không cần tôn trọng ý kiến người khác.",
+                "Sử dụng ngôn từ và cách viết tuỳ hứng."
+            ],
+            answer: 1,
+            type: "mc",
+            exp: "Tự kiểm điểm và cải thiện hành vi trực tuyến là cốt lõi để hình thành văn hóa ứng xử."
+        },
+        {
+            q: "Khi tham gia một cuộc thảo luận trên mạng xã hội, em cần ứng xử như thế nào?",
+            options: [
+                "Tự ý trao đổi thông tin riêng tư với bên thứ ba.",
+                "Mặc quần áo lịch sự và không để lộ vật dụng không phù hợp.",
+                "Sử dụng ngôn từ khiêu khích khi không đồng tình.",
+                "Nếu có ý kiến trái ngược, cần trao đổi một cách lịch sự trên tinh thần tôn trọng quan điểm của người khác."
+            ],
+            answer: 3,
+            type: "mc",
+            exp: "Tôn trọng quan điểm trái chiều là chuẩn mực ứng xử văn minh."
+        },
+        {
+            q: "Phát biểu nào sau đây sai về tường lửa và chia sẻ tài nguyên?",
+            options: [
+                "Tường lửa không ngăn chặn việc truy cập tài nguyên nếu người sử dụng được đánh giá là đáng tin cậy.",
+                "Ở Windows 10 và 11, tường lửa Defender mặc định được kích hoạt.",
+                "Windows thiết lập sẵn ở mỗi máy tính thư mục Public Networks.",
+                "Dữ liệu trong thư mục Public được mặc định là không chia sẻ."
+            ],
+            answer: 3,
+            type: "mc",
+            exp: "Dữ liệu trong thư mục Public được thiết kế mặc định để chia sẻ cho mọi người trong mạng cục bộ."
+        },
+        {
+            q: "Giao diện thiết lập chia sẻ thư mục không có mục nào sau đây?",
+            options: ["Advanced Sharing.", "Firewall Network Protection.", "Password Protection.", "Network File and Folder Sharing."],
+            answer: 1,
+            type: "mc",
+            exp: "Firewall Network Protection là cài đặt tường lửa, không nằm trong giao diện chia sẻ thư mục nâng cao."
+        },
+        {
+            q: "Sau khi chọn được máy in để chia sẻ, em cần chọn mục nào để mở cửa sổ thiết lập chia sẻ?",
+            options: ["Printer properties.", "Printing preferences.", "Open print queue.", "Printer preferences."],
+            answer: 0,
+            type: "mc",
+            exp: "Chọn Printer properties -> Thẻ Sharing để thiết lập chia sẻ máy in."
+        },
+        {
+            q: "Ở giao diện Private network, em cần làm gì để dừng tạm thời tường lửa?",
+            options: [
+                "Kéo con trượt của Windows Security về trạng thái Off.",
+                "Kéo con trượt của Firewall Network Protection về trạng thái On.",
+                "Kéo con trượt của Microsoft Defender Firewall về trạng thái Off.",
+                "Kéo con trượt của Network File and Folder Sharing về trạng thái Off."
+            ],
+            answer: 2,
+            type: "mc",
+            exp: "Tắt tường lửa Microsoft Defender Firewall bằng cách chuyển trạng thái sang Off."
+        },
+        {
+            q: "Trên trang HTML, thẻ <p> có ý nghĩa gì?",
+            options: ["Đoạn văn bản.", "Tiêu đề trang web.", "Tiêu đề văn bản.", "Một câu trích dẫn ngắn."],
+            answer: 0,
+            type: "mc",
+            exp: "Thẻ <p> (Paragraph) dùng để định nghĩa một đoạn văn bản trong HTML."
+        },
+        {
+            q: "Phát biểu nào sau đây sai về cú pháp HTML?",
+            options: [
+                "Một phần tử HTML được định nghĩa bởi thẻ bắt đầu, thẻ kết thúc và nội dung.",
+                "Dòng đầu tiên <!DOCTYPE html> có vai trò thông báo kiểu tệp là html và được xem là phần tử HTML.",
+                "<br> là thẻ đơn.",
+                "HTML không nhận biết kí tự xuống dòng khi nhấn phím Enter."
+            ],
+            answer: 1,
+            type: "mc",
+            exp: "<!DOCTYPE html> là khai báo kiểu tài liệu (document type declaration), KHÔNG phải là một phần tử HTML."
+        },
+        {
+            q: "Em sử dụng thẻ nào sau đây để chèn dòng kẻ ngang vào trang HTML?",
+            options: ["<br/>.", "<hr/>.", "<qr/>.", "<dr/>."],
+            answer: 1,
+            type: "mc",
+            exp: "Thẻ <hr/> (Horizontal Rule) dùng để tạo đường kẻ ngang."
+        },
+        {
+            q: "Đoạn mã HTML của câu “The RMS Titanic, a luxury steamship, sank on April 15, 1912 after striking an iceberg.” đúng là:",
+            options: [
+                "<p>The <b>RMS Titanic</b>, a luxury steamship, sank on <i>April 15, 1912</i> after striking an iceberg.</p>",
+                "<p>The <i>RMS Titanic</i>, a luxury steamship, sank on <u>April 15, 1912</u> after striking an iceberg.</p>",
+                "<p>The <u>RMS Titanic</u>, a luxury steamship, sank on <b>April 15, 1912</b> after striking an iceberg.</p>",
+                "<p>The <i>RMS Titanic</i>, a luxury steamship, sank on <b>April 15, 1912</b> after striking an iceberg.</p>"
+            ],
+            answer: 0,
+            type: "mc",
+            exp: "RMS Titanic được in đậm (<b>) và ngày tháng được in nghiêng (<i>)."
+        },
+        {
+            q: "Để phần mềm Notepad++ hiển thị và hỗ trợ soạn thảo HTML, em cần thực hiện lệnh gì?",
+            options: ["View → Syntax → HTML.", "View → H → HTML.", "Language → H → HTML.", "Language → Syntax → HTML."],
+            answer: 3,
+            type: "mc",
+            exp: "Chọn Language -> Syntax -> HTML (hoặc Language -> H -> HTML tùy phiên bản, chuẩn theo SGK là Language -> Syntax -> HTML)."
+        },
+        {
+            q: "Thiết bị nào sau đây dùng để chuyển đổi tín hiệu số thành tín hiệu tương tự và ngược lại khi kết nối qua đường điện thoại?",
+            options: ["Switch", "Modem", "Hub", "Router"],
+            answer: 1,
+            type: "mc",
+            exp: "Modem (Modulator-Demodulator) thực hiện nhiệm vụ điều chế và giải điều chế tín hiệu số và tương tự."
+        },
+        {
+            q: "Giao thức nào chịu trách nhiệm truyền dữ liệu tin cậy, đảm bảo các gói tin đến đúng thứ tự và không bị mất mát?",
+            options: ["IP", "TCP", "HTTP", "FTP"],
+            answer: 1,
+            type: "mc",
+            exp: "TCP (Transmission Control Protocol) cung cấp kết nối tin cậy, hướng kết nối."
+        },
+        {
+            q: "Trong địa chỉ IPv4, mỗi địa chỉ gồm bao nhiêu byte?",
+            options: ["2 byte", "4 byte", "8 byte", "16 byte"],
+            answer: 1,
+            type: "mc",
+            exp: "IPv4 gồm 32 bit tương đương với 4 byte."
+        },
+        {
+            q: "Thẻ HTML nào dùng để tạo tiêu đề lớn nhất cấp 1?",
+            options: ["<h6>", "<head>", "<h1>", "<title>"],
+            answer: 2,
+            type: "mc",
+            exp: "<h1> là thẻ tiêu đề lớn nhất trong HTML."
+        },
+        {
+            q: "Hành vi nào sau đây vi phạm đạo đức và pháp luật khi sử dụng không gian mạng?",
+            options: [
+                "Học tập trực tuyến qua Zoom.",
+                "Chia sẻ tài liệu học tập hữu ích.",
+                "Lan truyền thông tin giả mạo, bôi nhọ danh dự người khác.",
+                "Nhắn tin thăm hỏi người thân."
+            ],
+            answer: 2,
+            type: "mc",
+            exp: "Lan truyền thông tin giả mạo và bôi nhọ danh dự là hành vi vi phạm pháp luật."
+        },
+        {
+            q: "Để cấu hình chia sẻ thư mục trong Windows cho phép người khác chỉ có quyền đọc, ta chọn quyền nào?",
+            options: ["Write", "Full Control", "Read", "Modify"],
+            answer: 2,
+            type: "mc",
+            exp: "Quyền Read cho phép người dùng xem và đọc nội dung tệp tin nhưng không được sửa đổi."
+        },
+        {
+            q: "Phần tử gốc (root element) của một tài liệu HTML là gì?",
+            options: ["<body>", "<head>", "<html>", "<title>"],
+            answer: 2,
+            type: "mc",
+            exp: "Phần tử <html> bao trùm toàn bộ trang web và là phần tử gốc trong cây tài liệu DOM."
+        },
+        {
+            q: "Đánh giá Đúng/Sai về thiết bị mạng: Máy tính có thể kết nối vào mạng bằng cáp hoặc sóng Wi-Fi.",
+            isTfGroup: true,
+            statements: [
+                { text: "a. Wi-Fi là chữ viết tắt của cụm từ Wireless Fidelity.", correct: true },
+                { text: "b. Hầu hết các máy tính để bàn đều có sẵn khả năng kết nối Wi-Fi giống laptop.", correct: false },
+                { text: "c. Để máy tính trong LAN giao tiếp với Internet chỉ cần cắm cáp UTP vào cổng RJ45.", correct: false },
+                { text: "d. Muốn kết nối thiết bị di động vào LAN bằng trạm thu phát Wi-Fi được bảo mật, ta cần gõ đúng mật khẩu.", correct: true }
+            ],
+            exp: "Ý a, d đúng theo lý thuyết SGK. Ý b sai vì máy tính để bàn thường không tích hợp sẵn Wi-Fi. Ý c sai vì cần có Router kết nối internet và cấu hình cổng Gateway."
+        },
+        {
+            q: "Đánh giá Đúng/Sai về giao thức mạng IP và TCP:",
+            isTfGroup: true,
+            statements: [
+                { text: "a. Địa chỉ IP giống hoàn toàn với địa chỉ MAC của thiết bị mạng.", correct: false },
+                { text: "b. Mỗi địa chỉ IPv4 tiêu chuẩn là một số gồm 4 byte (32 bit).", correct: true },
+                { text: "c. Giao thức TCP chỉ đảm bảo chuyển dữ liệu giữa các mạng mà không đảm bảo đến ứng dụng cụ thể.", correct: false },
+                { text: "d. Việc tách dữ liệu thành nhiều gói giúp nhiều cuộc truyền thực hiện xen kẽ, tận dụng đường truyền.", correct: true }
+            ],
+            exp: "Ý b, d đúng. Ý a sai vì IP là địa chỉ logic, MAC là địa chỉ vật lý. Ý c sai vì TCP chịu trách nhiệm truyền tin đến ứng dụng cụ thể."
+        },
+        {
+            q: "Đánh giá Đúng/Sai về giao tiếp trong không gian mạng:",
+            isTfGroup: true,
+            statements: [
+                { text: "a. Không gian mạng cho phép con người giao tiếp thông qua mạng xã hội, ứng dụng nhắn tin, gọi video.", correct: true },
+                { text: "b. Giao tiếp trực tuyến chỉ có thể thực hiện được vào ban ngày và khi có sự cho phép của nhà mạng.", correct: false },
+                { text: "c. Giao tiếp trong không gian mạng có thể gây khó khăn trong việc truyền đạt cảm xúc dẫn đến hiểu lầm.", correct: true },
+                { text: "d. Tránh gửi nội dung thư rác hoặc quảng cáo không liên quan thể hiện sự tôn trọng khi giao tiếp.", correct: true }
+            ],
+            exp: "Ý a, c, d đúng. Ý b sai vì giao tiếp trực tuyến có thể thực hiện 24/7 mọi lúc mọi nơi khi có kết nối mạng."
+        },
+        {
+            q: "Đánh giá Đúng/Sai về cấu trúc tài liệu HTML:",
+            isTfGroup: true,
+            statements: [
+                { text: "a. Phần tử <meta> nằm trong phần tử <body> và dùng để mô tả thông tin mã hóa, từ khóa, tác giả.", correct: false },
+                { text: "b. Trong sơ đồ hình cây HTML, phần tử <html> đóng vai trò là phần tử gốc (root).", correct: true },
+                { text: "c. Nhóm các thẻ tiêu đề văn bản tăng dần cấp là từ <h1> đến <h6>.", correct: true },
+                { text: "d. Phần tử <title> nằm trong phần tử <head> và dùng để hiển thị tên của trang web trên tab trình duyệt.", correct: true }
+            ],
+            exp: "Ý b, c, d đúng. Ý a sai vì thẻ <meta> nằm bên trong phần tử <head> chứ không phải <body>."
+        }
+    ];
+
+    let currentExamQuestions = [];
+    let userAnswers = {};
+    let timerInterval;
+    let timeLeft = 45 * 60;
+    let studentName = "";
+
+    function validateLogin() {
+        let nameInput = document.getElementById('student-name').value.trim();
+        let passInput = document.getElementById('exam-password').value.trim();
+        let errorBox = document.getElementById('login-error');
+
+        if (nameInput === "" || passInput !== "dunggxinhhgaiicuteso1tg") {
+            errorBox.style.display = 'block';
+            errorBox.innerText = nameInput === "" ? "Vui lòng nhập họ tên thí sinh!" : "Mật khẩu không chính xác!";
+            return;
+        }
+
+        studentName = nameInput;
+        document.getElementById('candidate-display').innerText = "Thí sinh: " + studentName;
+        document.getElementById('exam-code-display').innerText = "MĐ-" + Math.floor(100 + Math.random() * 900);
+
+        document.getElementById('login-screen').classList.remove('active');
+        document.getElementById('exam-screen').classList.add('active');
+
+        generateExamPaper();
+        startTimer();
+    }
+
+    function generateExamPaper() {
+        let mcQuestions = questionBank.filter(q => !q.isTfGroup);
+        let tfQuestions = questionBank.filter(q => q.isTfGroup);
+
+        shuffleArray(mcQuestions);
+        shuffleArray(tfQuestions);
+
+        currentExamQuestions = [];
+        for (let i = 0; i < 36; i++) {
+            currentExamQuestions.push(mcQuestions[i % mcQuestions.length]);
+        }
+        for (let i = 0; i < 4; i++) {
+            currentExamQuestions.push(tfQuestions[i % tfQuestions.length]);
+        }
+
+        shuffleArray(currentExamQuestions);
+
+        renderQuestions();
+        renderPalette();
+    }
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    function renderQuestions() {
+        const container = document.getElementById('questions-container');
+        container.innerHTML = '';
+
+        currentExamQuestions.forEach((q, index) => {
+            let html = `<div class="question-card" id="q-card-${index}">
+                <div class="question-title">Câu ${index + 1}: ${q.q}</div>`;
+
+            if (!q.isTfGroup) {
+                html += `<ul class="options-list">`;
+                q.options.forEach((opt, optIdx) => {
+                    html += `<li class="option-item">
+                        <label class="option-label" id="label-${index}-${optIdx}">
+                            <input type="radio" name="question-${index}" value="${optIdx}" onclick="recordAnswer(${index}, ${optIdx})">
+                            <span>${String.fromCharCode(65 + optIdx)}. ${opt}</span>
+                        </label>
+                    </li>`;
+                });
+                html += `</ul>`;
+            } else {
+                html += `<div style="display: flex; flex-direction: column; gap: 10px;">`;
+                q.statements.forEach((st, stIdx) => {
+                    html += `<div style="background: white; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 6px;">
+                        <div style="font-weight: 500; margin-bottom: 6px;">${st.text}</div>
+                        <div style="display: flex; gap: 20px;">
+                            <label style="cursor: pointer;"><input type="radio" name="tf-${index}-${stIdx}" value="true" onclick="recordTfAnswer(${index}, ${stIdx}, true)"> Đúng</label>
+                            <label style="cursor: pointer;"><input type="radio" name="tf-${index}-${stIdx}" value="false" onclick="recordTfAnswer(${index}, ${stIdx}, false)"> Sai</label>
+                        </div>
+                    </div>`;
+                });
+                html += `</div>`;
+            }
+
+            html += `<div class="explanation" id="exp-${index}"><strong>Giải thích:</strong> ${q.exp}</div>`;
+            html += `</div>`;
+            container.innerHTML += html;
+        });
+    }
+
+    function renderPalette() {
+        const grid = document.getElementById('palette-grid');
+        grid.innerHTML = '';
+        currentExamQuestions.forEach((_, index) => {
+            grid.innerHTML += `<button class="palette-btn" id="palette-${index}" onclick="scrollToQuestion(${index})">${index + 1}</button>`;
+        });
+    }
+
+    function scrollToQuestion(index) {
+        let el = document.getElementById(`q-card-${index}`);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function recordAnswer(qIndex, optIndex) {
+        userAnswers[qIndex] = optIndex;
+        let btn = document.getElementById(`palette-${qIndex}`);
+        if (btn) btn.classList.add('answered');
+    }
+
+    function recordTfAnswer(qIndex, stIndex, val) {
+        if (!userAnswers[qIndex]) userAnswers[qIndex] = {};
+        userAnswers[qIndex][stIndex] = val;
+        
+        if (currentExamQuestions[qIndex] && currentExamQuestions[qIndex].statements) {
+            if (Object.keys(userAnswers[qIndex]).length === currentExamQuestions[qIndex].statements.length) {
+                let btn = document.getElementById(`palette-${qIndex}`);
+                if (btn) btn.classList.add('answered');
+            }
+        }
+    }
+
+    function startTimer() {
+        timerInterval = setInterval(() => {
+            let minutes = Math.floor(timeLeft / 60);
+            let seconds = timeLeft % 60;
+            let timerEl = document.getElementById('timer');
+            if (timerEl) timerEl.innerText = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                alert("Hết thời gian làm bài! Hệ thống sẽ tự động nộp bài.");
+                submitExam();
+            }
+            timeLeft--;
+        }, 1000);
+    }
+
+    function submitExam() {
+        if (!confirm("Bạn có chắc chắn muốn nộp bài thi không?")) return;
+        clearInterval(timerInterval);
+
+        let correctCount = 0;
+        let totalQuestions = currentExamQuestions.length;
+
+        try {
+            currentExamQuestions.forEach((q, index) => {
+                let expBox = document.getElementById(`exp-${index}`);
+                if (expBox) expBox.style.display = 'block';
+
+                if (!q.isTfGroup) {
+                    let userAns = userAnswers[index];
+                    let correctAnswer = q.answer;
+
+                    q.options.forEach((_, optIdx) => {
+                        let label = document.getElementById(`label-${index}-${optIdx}`);
+                        if (label) {
+                            if (optIdx === correctAnswer) {
+                                label.classList.add('correct-ans');
+                            } else if (optIdx === userAns) {
+                                label.classList.add('incorrect-ans');
+                            }
+                        }
+                    });
+
+                    if (userAns === correctAnswer) {
+                        correctCount++;
+                    }
+                } else {
+                    let userTf = userAnswers[index] || {};
+                    let allCorrect = true;
+                    q.statements.forEach((st, stIdx) => {
+                        if (userTf[stIdx] !== st.correct) {
+                            allCorrect = false;
+                        }
+                    });
+                    if (allCorrect && Object.keys(userTf).length === q.statements.length) {
+                        correctCount++;
+                    }
+                }
+            });
+        } catch (e) {
+            console.error("Lỗi khi chấm điểm:", e);
+        }
+
+        let finalScore = ((correctCount / totalQuestions) * 10).toFixed(2);
+        
+        let examScreen = document.getElementById('exam-screen');
+        let resultScreen = document.getElementById('result-screen');
+        if (examScreen) examScreen.classList.remove('active');
+        if (resultScreen) resultScreen.classList.add('active');
+
+        let scoreDisplay = document.getElementById('score-display');
+        if (scoreDisplay) scoreDisplay.innerText = `${finalScore} / 10 điểm`;
+
+        let detailText = document.getElementById('result-detail-text');
+        if (detailText) detailText.innerText = `Bạn trả lời đúng ${correctCount}/${totalQuestions} câu.`;
+
+        let funTitleText = "";
+        if (finalScore >= 9) funTitleText = "🏆 Danh hiệu: 'Đại cao thủ Tin học' - Hacker mũ trắng kiêm chuyên gia Web!";
+        else if (finalScore >= 7) funTitleText = "🥈 Danh hiệu: 'Thành viên xuất sắc' - Nắm vững kiến thức mạng và HTML vững chắc!";
+        else if (finalScore >= 5) funTitleText = "🥉 Danh hiệu: 'Đã qua môn' - Cần ôn tập thêm một chút về giao thức và tường lửa!";
+        else funTitleText = "💻 Danh hiệu: 'Tập sự chăm chỉ' - Hãy đọc lại kỹ tài liệu SGK để cải thiện nhé!";
+        
+        let funTitleEl = document.getElementById('fun-title');
+        if (funTitleEl) funTitleEl.innerText = funTitleText;
+
+        saveLeaderboard(studentName || "Thí sinh ẩn danh", finalScore, 45 - Math.floor(timeLeft / 60), funTitleText);
+        loadLeaderboard();
+        
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function saveLeaderboard(name, score, timeTaken, title) {
+        try {
+            let lb = JSON.parse(localStorage.getItem('tinHoc12_leaderboard')) || [];
+            lb.push({ name, score: parseFloat(score), timeTaken, title, date: new Date().toLocaleDateString() });
+            lb.sort((a, b) => b.score - a.score || a.timeTaken - b.timeTaken);
+            localStorage.setItem('tinHoc12_leaderboard', JSON.stringify(lb));
+        } catch (e) {
+            console.error("Lỗi lưu localStorage:", e);
+        }
+    }
+
+    function loadLeaderboard() {
+        try {
+            let lb = JSON.parse(localStorage.getItem('tinHoc12_leaderboard')) || [];
+            let tbody = document.getElementById('leaderboard-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            if (lb.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center;">Chưa có dữ liệu xếp hạng.</td></tr>`;
+                return;
+            }
+
+            lb.forEach((item, idx) => {
+                let badgeClass = "badge-normal";
+                if (idx === 0) badgeClass = "badge-gold";
+                else if (idx === 1) badgeClass = "badge-silver";
+                else if (idx === 2) badgeClass = "badge-bronze";
+
+                tbody.innerHTML += `<tr>
+                    <td><span class="badge ${badgeClass}">#${idx + 1}</span></td>
+                    <td><strong>${item.name}</strong></td>
+                    <td><span style="color: var(--primary-color); font-weight: bold;">${item.score} đ</span></td>
+                    <td>${item.timeTaken} phút</td>
+                    <td><em>${item.title}</em></td>
+                </tr>`;
+            });
+        } catch (e) {
+            console.error("Lỗi tải bảng xếp hạng:", e);
+        }
+    }
+</script>
+
+</body>
+</html>
